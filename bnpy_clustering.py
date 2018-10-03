@@ -8,7 +8,7 @@ import uncurl
 from uncurl.preprocessing import log1p, cell_normalize
 
 
-def bnpy_select_clusters(data, max_cells=5000):
+def bnpy_select_clusters(data, max_cells=50000):
     """
     Args:
         data: matrix of shape genes x cells
@@ -18,7 +18,11 @@ def bnpy_select_clusters(data, max_cells=5000):
             the assigned labels.
     """
     # TODO: randomly sub-select max_cells
-    cell_frac = min(1.0, float(data.shape[1])/float(max_cells))
+    selected_cell_ids = list(range(data.shape[1]))
+    if max_cells < data.shape[1]:
+        import random
+        selected_cell_ids = random.sample(selected_cell_ids, max_cells)
+    data = data[:, selected_cell_ids]
     tsvd = TruncatedSVD(8)
     data_tsvd = tsvd.fit_transform(log1p(cell_normalize(data)).T)
     data_dense_bnpy = bnpy.data.XData(data_tsvd)
@@ -87,7 +91,7 @@ if __name__ == '__main__':
     data_5 = scipy.sparse.csc_matrix(data_5)
     gene_subset = uncurl.max_variance_genes(data_5)
     data_subset = data_5[gene_subset, :]
-    true_labels = np.loadtxt('../../uncurl_test_datasets/10x_pure_pooled/labels_8000_cells.txt', dtype=int).flatten()
-    selected_k, labels=bnpy_select_clusters(data)
+    true_labels = np.loadtxt('../../uncurl_test_datasets/10x_pure_pooled/labels_8000_cells.txt').astype(int).flatten()
+    selected_k, labels=bnpy_select_clusters(data_subset)
     print(selected_k)
     print('nmi: ' + str(nmi(true_labels, labels)))
