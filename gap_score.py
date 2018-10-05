@@ -52,7 +52,8 @@ def calculate_gap(data, clustering, km, B=50):
     return gap, sk
 
 
-def run_gap_k_selection(data, k_min=1, k_max=15, B=50):
+def run_gap_k_selection(data, k_min=1, k_max=15, B=50,
+        skip=1):
     """
     Runs gap score for all k from k_min to k_max.
     """
@@ -60,16 +61,38 @@ def run_gap_k_selection(data, k_min=1, k_max=15, B=50):
         return k_min
     gap_vals = []
     sk_vals = []
-    for k in range(k_min, k_max):
+    k_range = list(range(k_min, k_max, skip))
+    min_k = 0
+    min_i = 0
+    for i, k in enumerate(k_range):
+        km = KMeans(k)
+        clusters = km.fit_predict(data)
+        gap, sk = calculate_gap(data, clusters, km, B=B)
+        if len(gap_vals) > 1:
+            if gap_vals[-1] >= gap - skip*sk:
+                min_i = i
+                min_k = k_range[i-1]
+                break
+                #return k_range[-1], gap_vals, sk_vals
+        gap_vals.append(gap)
+        sk_vals.append(sk)
+    if min_k == 0:
+        min_k = k_max
+    if skip == 1:
+        return min_k, gap_vals, sk_vals
+    gap_vals = []
+    sk_vals = []
+    for k in range(min_k - skip, min_k + skip):
         km = KMeans(k)
         clusters = km.fit_predict(data)
         gap, sk = calculate_gap(data, clusters, km, B=B)
         if len(gap_vals) > 1:
             if gap_vals[-1] >= gap - sk:
-                return k-1, gap_vals, sk_vals
+                min_k = k-1
+                return min_k, gap_vals, sk_vals
         gap_vals.append(gap)
         sk_vals.append(sk)
-    return k_max, gap_vals, sk_vals
+    return min_k, gap_vals, sk_vals
 
 
 if __name__ == '__main__':
@@ -79,7 +102,8 @@ if __name__ == '__main__':
     data = data_mat['data']
     data_tsvd = preproc_data(data)
     #max_k, bic_vals = run_bic_k_selection(data_tsvd)
-    max_k, gap_vals, sk_vals = run_gap_k_selection(data_tsvd)
+    max_k, gap_vals, sk_vals = run_gap_k_selection(data_tsvd, 
+            k_min=1, k_max=50, skip=5, B=5)
     print(max_k)
     print(gap_vals)
     print(sk_vals)
@@ -88,7 +112,10 @@ if __name__ == '__main__':
     data = data_mat_2['Dat']
     data_tsvd = preproc_data(data)
     #max_k, bic_vals = run_bic_k_selection(data_tsvd)
-    max_k, gap_vals, sk_vals = run_gap_k_selection(data_tsvd)
+    #max_k, gap_vals, sk_vals = run_gap_k_selection(data_tsvd, B=5)
+    max_k, gap_vals, sk_vals = run_gap_k_selection(data_tsvd, 
+            k_min=1, k_max=50, skip=5, B=5)
+ 
     print(max_k)
     print(gap_vals)
     print(sk_vals)
@@ -97,7 +124,10 @@ if __name__ == '__main__':
     data = data_mat_3['Dat']
     data_tsvd = preproc_data(data)
     #max_k, bic_vals = run_bic_k_selection(data_tsvd)
-    max_k, gap_vals, sk_vals = run_gap_k_selection(data_tsvd)
+    #max_k, gap_vals, sk_vals = run_gap_k_selection(data_tsvd, B=5)
+    max_k, gap_vals, sk_vals = run_gap_k_selection(data_tsvd, 
+            k_min=1, k_max=50, skip=5, B=5)
+ 
     print(max_k)
     print(gap_vals)
     print(sk_vals)
@@ -107,7 +137,10 @@ if __name__ == '__main__':
     data_4 = scipy.sparse.csc_matrix(data_4)
     data_tsvd = preproc_data(data_4)
     #max_k, bic_vals = run_bic_k_selection(data_tsvd)
-    max_k, gap_vals, sk_vals = run_gap_k_selection(data_tsvd)
+    #max_k, gap_vals, sk_vals = run_gap_k_selection(data_tsvd, B=5)
+    max_k, gap_vals, sk_vals = run_gap_k_selection(data_tsvd, 
+            k_min=1, k_max=50, skip=5, B=5)
+ 
     print(max_k)
     print(gap_vals)
     print(sk_vals)
@@ -116,7 +149,10 @@ if __name__ == '__main__':
     data_5 = scipy.sparse.csc_matrix(data_5)
     data_tsvd = preproc_data(data_5)
     #max_k, bic_vals = run_bic_k_selection(data_tsvd)
-    max_k, gap_vals, sk_vals = run_gap_k_selection(data_tsvd)
+    #max_k, gap_vals, sk_vals = run_gap_k_selection(data_tsvd, B=5)
+    max_k, gap_vals, sk_vals = run_gap_k_selection(data_tsvd, 
+            k_min=1, k_max=50, skip=5, B=5)
+ 
     print(max_k)
     print(gap_vals)
     print(sk_vals)
